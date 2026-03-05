@@ -1,70 +1,78 @@
-# Getting Started with Create React App
+# ⌨️ Keyboard Visualizer & Screen Tester 🖥️
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A sleek, modern desktop application for visualizing keyboard inputs and diagnosing screen quality. Built with **Electron**, **React**, and **Tailwind CSS**, this tool provides real-time feedback for gamers, developers, and hardware enthusiasts.
 
-## Available Scripts
+## 🚀 Features
 
-In the project directory, you can run:
+### 1. ⌨️ Keyboard Input Visualizer
+- **Real-time Visualization**: See every keypress on a high-fidelity virtual keyboard.
+- **Terminal Log**: A scrolling history of key codes for precise input tracking.
+- **Multi-key Support**: Accurately shows combinations (Shift, Ctrl, Alt, etc.).
+- **Modern Aesthetic**: Dark mode by default with glowing effects and a "terminal" feel.
 
-### `npm start`
+### 2. 🖥️ Screen Diagnostics
+- **Color Tests**: Cycle through Primary (RGB) and All (CMYK/RGB) colors to check for dead pixels and color accuracy.
+- **Grayscale Test**: Check for display banding and backlight uniformity.
+- **Motion Testing**: Standard and High-speed pan tests to detect ghosting and response time issues.
+- **Fullscreen Mode**: Automatically enters full screen for immersive, distraction-free testing.
+- **Desktop Ready**: Works as a standalone cross-platform desktop application.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## 🛠️ Tech Stack
+- **Runtime**: [Electron](https://www.electronjs.org/)
+- **Frontend**: [React](https://reactjs.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **State Management**: React Hooks (`useState`, `useEffect`, `useCallback`)
+- **Animation**: `requestAnimationFrame` for buttery-smooth motion tests.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🚦 Getting Started
 
-### `npm test`
+### Prerequisites
+- Node.js (v14+)
+- npm or yarn
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Installation
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/zxmichael95/Keyboard-Screen-Tester.git
+   ```
+2. Navigate to the project directory:
+   ```bash
+   cd keyboard-visualizer
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
+4. Start the React development server:
+   ```bash
+   npm start
+   ```
+5. Running as a Desktop App:
+   ```bash
+   npm run electron-dev
+   ```
 
-### `npm run build`
+### Building for Production
+To package the app for your operating system:
+```bash
+npm run electron-pack
+```
+The packaged application will be available in the `/dist` directory.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 📂 Project Structure
+```text
+/src
+  ├── App.js               # Main application entry point & navigation
+  ├── KeyboardVisualizer.js # Keyboard visualizer logic & styles
+  ├── ScreenTester.js       # Screen diagnostic tests & animations
+  └── index.js             # React DOM rendering
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 📄 License
+This project is open-source and available under the MIT License.
 
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+*Created with ❤️ for the hardware community.*
