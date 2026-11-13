@@ -109,18 +109,18 @@ const numpadLayout = [
  * Key Component - Renders a single key
  */
 const Key = ({ label, width, isPressed, isRePressed, span = 1 }) => {
-    const baseStyle = "flex relative items-center justify-center h-14 rounded-md border-2 p-1 text-center text-sm font-mono transition-all duration-100 ease-out select-none";
+    const baseStyle = "flex relative items-center justify-center h-12 rounded-lg border p-1 text-center text-xs sm:text-sm font-mono transition-all duration-100 ease-out select-none";
 
     const keyClasses = [baseStyle];
     if (isRePressed) {
-        keyClasses.push("bg-white text-black border-gray-400 shadow-[0_0_25px_8px_rgba(255,255,255,0.7)] scale-105 z-10");
+        keyClasses.push("bg-white text-zinc-950 border-white shadow-[0_0_20px_4px_rgba(255,255,255,0.45)] scale-105 z-10 font-bold");
     } else if (isPressed) {
-        keyClasses.push("bg-gray-400 text-black border-gray-500 shadow-[0_0_15px_3px_rgba(209,213,219,0.6)]");
+        keyClasses.push("bg-emerald-500/20 text-emerald-300 border-emerald-500/70 shadow-[0_0_12px_rgba(16,185,129,0.25)] font-semibold");
     } else {
-        keyClasses.push("bg-gray-800/80 text-gray-300 border-gray-700 backdrop-blur-sm hover:bg-gray-700/90 hover:border-gray-500");
+        keyClasses.push("bg-zinc-900 text-zinc-300 border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700");
     }
 
-    const widthStyle = { flexBasis: `calc(${width * 3.5}rem - 6px)`, flexGrow: width };
+    const widthStyle = { flexBasis: `calc(${width * 3.25}rem - 6px)`, flexGrow: width };
     const spanStyle = { gridRow: `span ${span} / span ${span}` };
 
     return (
@@ -164,12 +164,21 @@ export default function KeyboardVisualizer() {
     const [rePressedKey, setRePressedKey] = useState(null);
     const [keyHistory, setKeyHistory] = useState([]);
     const terminalRef = useRef(null);
+    const rePressTimeoutRef = useRef(null);
 
     useEffect(() => {
         if (terminalRef.current) {
             terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
         }
     }, [keyHistory]);
+
+    useEffect(() => {
+        return () => {
+            if (rePressTimeoutRef.current) {
+                clearTimeout(rePressTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const handleKeyDown = useCallback((e) => {
         if (e.repeat) return;
@@ -178,11 +187,17 @@ export default function KeyboardVisualizer() {
         setPressedKeys(current => {
             if (current.has(code)) {
                 setRePressedKey(code);
-                setTimeout(() => setRePressedKey(null), 150);
+                if (rePressTimeoutRef.current) {
+                    clearTimeout(rePressTimeoutRef.current);
+                }
+                rePressTimeoutRef.current = setTimeout(() => setRePressedKey(null), 150);
             }
             return new Set(current).add(code);
         });
-        setKeyHistory(prev => [...prev, code]);
+        setKeyHistory(prev => {
+            const next = [...prev, code];
+            return next.length > 200 ? next.slice(next.length - 200) : next;
+        });
     }, []);
 
     const resetHighlights = () => {
@@ -198,38 +213,40 @@ export default function KeyboardVisualizer() {
 
     return (
         <div className="flex flex-col items-center w-full">
-            <header className="flex justify-between items-center mb-4 border-b-2 border-gray-500/30 pb-2 w-full">
+            <header className="flex justify-between items-center mb-5 border-b border-zinc-800 pb-3 w-full gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-widest" style={{ textShadow: '0 0 8px rgba(209, 213, 219, 0.5)' }}>KEYBOARD INPUT VISUALIZER</h1>
-                    <p className="text-xs text-gray-400">SYSTEM: MONO-TERM v2.2</p>
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-widest text-zinc-100">KEYBOARD INPUT VISUALIZER</h1>
+                    <p className="text-xs text-zinc-500 font-mono">SYSTEM: MONO-TERM v2.3 • TESTED KEYS: <span className="text-emerald-400 font-semibold">{pressedKeys.size}</span></p>
                 </div>
                 <button
                     onClick={resetHighlights}
-                    className="bg-gray-800/80 text-gray-300 border-2 border-gray-700 rounded-md px-4 py-2 hover:bg-gray-400 hover:text-black hover:shadow-[0_0_15px_3px_rgba(209,213,219,0.6)] transition-all duration-200"
+                    className="bg-zinc-900 text-zinc-200 border border-zinc-700 rounded-lg px-4 py-2 text-sm font-mono hover:bg-zinc-100 hover:text-zinc-950 transition-all duration-150"
                 >
                     RESET
                 </button>
             </header>
 
-            <main className="flex flex-row items-start gap-6 p-4 bg-black/30 rounded-lg border border-gray-700/50 shadow-2xl">
-                <KeyboardSection layout={mainKeysLayout} pressedKeys={pressedKeys} rePressedKey={rePressedKey} />
-                <div className="flex flex-col gap-4">
-                    <KeyboardSection layout={navLayout} pressedKeys={pressedKeys} rePressedKey={rePressedKey} />
-                    <KeyboardSection layout={arrowLayout} pressedKeys={pressedKeys} rePressedKey={rePressedKey} />
-                </div>
-                <KeyboardSection layout={numpadLayout} pressedKeys={pressedKeys} rePressedKey={rePressedKey} />
-            </main>
+            <div className="w-full overflow-x-auto pb-2">
+                <main className="flex flex-row items-start justify-center gap-5 p-4 bg-zinc-900/60 rounded-xl border border-zinc-800 shadow-2xl min-w-max mx-auto">
+                    <KeyboardSection layout={mainKeysLayout} pressedKeys={pressedKeys} rePressedKey={rePressedKey} />
+                    <div className="flex flex-col gap-4">
+                        <KeyboardSection layout={navLayout} pressedKeys={pressedKeys} rePressedKey={rePressedKey} />
+                        <KeyboardSection layout={arrowLayout} pressedKeys={pressedKeys} rePressedKey={rePressedKey} />
+                    </div>
+                    <KeyboardSection layout={numpadLayout} pressedKeys={pressedKeys} rePressedKey={rePressedKey} />
+                </main>
+            </div>
 
-            <footer ref={terminalRef} className="mt-4 p-3 h-40 w-full bg-black/50 rounded-md border border-gray-700/50 overflow-y-auto font-mono text-left text-gray-300 shadow-inner">
+            <footer ref={terminalRef} className="mt-4 p-3 h-36 w-full bg-zinc-900/70 rounded-xl border border-zinc-800 overflow-y-auto font-mono text-left text-zinc-300 shadow-inner">
                 {keyHistory.map((key, index) => (
-                    <div key={index}>
-                        <span className="text-gray-500 mr-2">&gt;</span>
-                        <span className="text-base">{key}</span>
+                    <div key={index} className="leading-relaxed">
+                        <span className="text-zinc-600 mr-2">&gt;</span>
+                        <span className="text-sm">{key}</span>
                     </div>
                 ))}
                 <div className="flex items-center">
-                    <span className="text-gray-500 mr-2">&gt;</span>
-                    <span className="inline-block w-2.5 h-4 bg-gray-300 animate-pulse" style={{ animationDuration: '1.5s' }}></span>
+                    <span className="text-zinc-600 mr-2">&gt;</span>
+                    <span className="inline-block w-2 h-4 bg-emerald-400 animate-pulse" style={{ animationDuration: '1.5s' }}></span>
                 </div>
             </footer>
         </div>

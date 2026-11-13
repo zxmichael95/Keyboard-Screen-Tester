@@ -2,7 +2,7 @@
   "author": "Misha",
   "description": "A desktop keyboard input visualizer",
   "name": "keyboard-visualizer",
-  "version": "0.2.0",
+  "version": "0.2.33",
   "private": true,
   "main": "public/electron.js",
   "homepage": "./",
@@ -25,9 +25,9 @@
     ],
     "directories": {
       "buildResources": "assets"
-      },
-  "win": {
-    "icon": "assets/icon.ico"
+    },
+    "win": {
+      "icon": "assets/icon.ico"
     }
   },
   "scripts": {

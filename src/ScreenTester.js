@@ -1,48 +1,85 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
+const COLORS = {
+    grey: ['#000000', '#333333', '#666666', '#999999', '#CCCCCC', '#FFFFFF'],
+    primary: ['#FF0000', '#00FF00', '#0000FF'],
+    all: ['#FF0000', '#00FF00', '#0000FF', '#00FFFF', '#FF00FF', '#FFFF00', '#FFFFFF', '#000000'],
+};
 
 export default function ScreenTester() {
     const [activeTest, setActiveTest] = useState(null); // 'grey', 'primary', 'all', 'motion', 'fast-motion'
     const [testStep, setTestStep] = useState(0);
     const containerRef = useRef(null);
-    const requestRef = useRef();
+    const requestRef = useRef(null);
 
-    const colors = {
-        grey: ['#000000', '#333333', '#666666', '#999999', '#CCCCCC', '#FFFFFF'],
-        primary: ['#FF0000', '#00FF00', '#0000FF'],
-        all: ['#FF0000', '#00FF00', '#0000FF', '#00FFFF', '#FF00FF', '#FFFF00', '#FFFFFF', '#000000']
-    };
+    const exitTest = useCallback(() => {
+        if (document.fullscreenElement && document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+        }
+        setActiveTest(null);
+        if (requestRef.current) {
+            cancelAnimationFrame(requestRef.current);
+        }
+    }, []);
 
     const startTest = (testName) => {
         setActiveTest(testName);
         setTestStep(0);
-        if (containerRef.current) {
-            containerRef.current.requestFullscreen().catch(err => {
-                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-            });
-        }
+        setTimeout(() => {
+            if (containerRef.current && containerRef.current.requestFullscreen) {
+                containerRef.current.requestFullscreen().catch(() => {});
+            }
+        }, 0);
     };
 
-    const handleFullscreenChange = () => {
-        if (!document.fullscreenElement) {
-            setActiveTest(null);
-            cancelAnimationFrame(requestRef.current);
+    const stepColor = useCallback((delta) => {
+        if (activeTest === 'grey' || activeTest === 'primary' || activeTest === 'all') {
+            const len = COLORS[activeTest].length;
+            setTestStep((prev) => (prev + delta + len) % len);
         }
-    };
+    }, [activeTest]);
 
     useEffect(() => {
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement) {
+                setActiveTest(null);
+                if (requestRef.current) {
+                    cancelAnimationFrame(requestRef.current);
+                }
+            }
+        };
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         return () => {
             document.removeEventListener('fullscreenchange', handleFullscreenChange);
-            cancelAnimationFrame(requestRef.current);
+            if (requestRef.current) {
+                cancelAnimationFrame(requestRef.current);
+            }
         };
     }, []);
 
     useEffect(() => {
-        const animate = (time) => {
+        if (!activeTest) return;
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                exitTest();
+            } else if (e.key === ' ' || e.key === 'ArrowRight' || e.key === 'Enter') {
+                e.preventDefault();
+                stepColor(1);
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                stepColor(-1);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [activeTest, exitTest, stepColor]);
+
+    useEffect(() => {
+        const animate = () => {
             if (activeTest === 'motion' || activeTest === 'fast-motion') {
-                setTestStep(prev => {
+                setTestStep((prev) => {
                     const speed = activeTest === 'fast-motion' ? 25 : 5;
-                    const width = window.screen.width;
+                    const width = window.screen.width || window.innerWidth;
                     return (prev + speed) % width;
                 });
                 requestRef.current = requestAnimationFrame(animate);
@@ -51,24 +88,22 @@ export default function ScreenTester() {
 
         if (activeTest === 'motion' || activeTest === 'fast-motion') {
             requestRef.current = requestAnimationFrame(animate);
-        } else {
+        } else if (requestRef.current) {
             cancelAnimationFrame(requestRef.current);
         }
-        return () => cancelAnimationFrame(requestRef.current);
+        return () => {
+            if (requestRef.current) {
+                cancelAnimationFrame(requestRef.current);
+            }
+        };
     }, [activeTest]);
-
-    const handleClick = () => {
-        if (activeTest === 'grey' || activeTest === 'primary' || activeTest === 'all') {
-            setTestStep(prev => (prev + 1) % colors[activeTest].length);
-        }
-    };
 
     const renderTestContent = () => {
         if (!activeTest) return null;
 
         if (activeTest === 'motion' || activeTest === 'fast-motion') {
             return (
-                <div className="w-full h-full bg-black relative cursor-none">
+                <div className="w-full h-full bg-black relative cursor-none" onClick={exitTest}>
                     <div
                         style={{
                             position: 'absolute',
@@ -76,22 +111,25 @@ export default function ScreenTester() {
                             top: 0,
                             bottom: 0,
                             width: '50px',
-                            backgroundColor: 'white'
+                            backgroundColor: 'white',
                         }}
                     />
                 </div>
             );
         }
 
-        const currentColors = colors[activeTest];
+        const currentColors = COLORS[activeTest];
         const color = currentColors[testStep % currentColors.length];
 
         return (
             <div
-                className="w-full h-full cursor-pointer flex items-center justify-center"
+                className="w-full h-full cursor-pointer relative"
                 style={{ backgroundColor: color }}
-                onClick={handleClick}
+                onClick={() => stepColor(1)}
             >
+                <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-lg bg-black/50 text-white/80 font-mono text-xs pointer-events-none backdrop-blur-sm border border-white/10">
+                    Click / Space: Next ({(testStep % currentColors.length) + 1}/{currentColors.length}) • ESC: Exit
+                </div>
             </div>
         );
     };
@@ -105,20 +143,20 @@ export default function ScreenTester() {
     }
 
     return (
-        <div className="flex flex-col items-center w-full" ref={containerRef}>
-            <header className="flex justify-between items-center mb-8 border-b-2 border-gray-500/30 pb-2 w-full">
+        <div className="flex flex-col items-center w-full">
+            <header className="flex justify-between items-center mb-6 border-b border-zinc-800 pb-3 w-full">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-widest" style={{ textShadow: '0 0 8px rgba(209, 213, 219, 0.5)' }}>SCREEN DIAGNOSTICS</h1>
-                    <p className="text-xs text-gray-400">SYSTEM: DISPLAY-TEST v1.0</p>
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-widest text-zinc-100">SCREEN DIAGNOSTICS</h1>
+                    <p className="text-xs text-zinc-500 font-mono">SYSTEM: DISPLAY-TEST v1.1 • CLICK OR SPACE TO CYCLE • ESC TO EXIT</p>
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-4xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                 <TestButton title="GREY SCALE" onClick={() => startTest('grey')} description="Cycle through grey shades to check for banding and uniformity." />
-                <TestButton title="PRIMARY COLORS" onClick={() => startTest('primary')} description="Cycle RGB to check for dead pixels." />
+                <TestButton title="PRIMARY COLORS" onClick={() => startTest('primary')} description="Cycle RGB to check for dead or stuck pixels." />
                 <TestButton title="ALL COLORS" onClick={() => startTest('all')} description="Cycle full spectrum (CMYK/RGB) for color accuracy." />
                 <TestButton title="MOTION TEST" onClick={() => startTest('motion')} description="Standard speed pan to check for ghosting." />
-                <TestButton title="HIGH SPEED" onClick={() => startTest('fast-motion')} description="High speed pan to check for response time." />
+                <TestButton title="HIGH SPEED" onClick={() => startTest('fast-motion')} description="High speed pan to check panel response time." />
             </div>
         </div>
     );
@@ -127,9 +165,9 @@ export default function ScreenTester() {
 const TestButton = ({ title, onClick, description }) => (
     <button
         onClick={onClick}
-        className="flex flex-col items-center justify-center p-6 bg-gray-800/80 border-2 border-gray-700 rounded-lg hover:bg-gray-700/90 hover:border-gray-500 hover:shadow-[0_0_15px_3px_rgba(209,213,219,0.4)] transition-all duration-200 group"
+        className="flex flex-col items-center justify-center p-6 bg-zinc-900/70 border border-zinc-800 rounded-xl hover:bg-zinc-800/80 hover:border-zinc-600 transition-all duration-150 group shadow-lg"
     >
-        <span className="text-xl font-bold text-gray-300 group-hover:text-white mb-2 font-mono">{title}</span>
-        <span className="text-xs text-gray-500 text-center group-hover:text-gray-400">{description}</span>
+        <span className="text-lg font-bold text-zinc-200 group-hover:text-white mb-2 font-mono tracking-wide">{title}</span>
+        <span className="text-xs text-zinc-500 text-center group-hover:text-zinc-400">{description}</span>
     </button>
 );
